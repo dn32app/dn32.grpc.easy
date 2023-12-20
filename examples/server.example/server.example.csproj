@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\dn32.persistent.json.grpc.connection.server\dn32.grpc.easy.server.csproj" />
+    <ProjectReference Include="..\..\src\dn32.grpc.easy.server\dn32.grpc.easy.server.csproj" />
     <ProjectReference Include="..\shared.example.contract\shared.example.contract.csproj" />
   </ItemGroup>
 

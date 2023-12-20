@@ -6,8 +6,16 @@
 		<PackageProjectUrl>https://github.com/dn32app/dn32.grpc.easy</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/dn32app/dn32.grpc.easy</RepositoryUrl>
 		<Version>1.0.1-beta01</Version>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 	
+	<ItemGroup>
+		<None Include="..\..\LICENSE.txt" Pack="true" PackagePath=""/>
+		<None Include="..\..\README.md" Pack="true" PackagePath=""/>
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.1.1" />
 	</ItemGroup>

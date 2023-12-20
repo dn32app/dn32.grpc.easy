@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\dn32.persistent.json.grpc.connection.client\dn32.grpc.easy.client.csproj" />
+    <ProjectReference Include="..\..\src\dn32.grpc.easy.client\dn32.grpc.easy.client.csproj" />
     <ProjectReference Include="..\shared.example.contract\shared.example.contract.csproj" />
   </ItemGroup>
 
