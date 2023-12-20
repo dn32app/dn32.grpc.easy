@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8</TargetFramework>
+		<Nullable>enable</Nullable>
+		<PackageProjectUrl>https://github.com/dn32app/dn32.grpc.easy</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/dn32app/dn32.grpc.easy</RepositoryUrl>
+		<Version>1.0.1-beta01</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\.editorconfig" Link=".editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.1.1" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.59.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+	</ItemGroup>
+
+</Project>
+
