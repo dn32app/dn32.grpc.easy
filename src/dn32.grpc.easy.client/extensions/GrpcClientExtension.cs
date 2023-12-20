@@ -1,14 +1,14 @@
-﻿using Grpc.Core;
-using Grpc.Net.Client.Configuration;
+﻿using dn32.grpc.easy.client.model;
+using Grpc.Core;
 using Grpc.Net.Client;
+using Grpc.Net.Client.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Net.Security;
-using System.Security.Authentication;
 using ProtoBuf.Grpc.Client;
 using ProtoBuf.Grpc.Configuration;
+using System;
 using System.Net.Http;
-using dn32.grpc.easy.client.model;
+using System.Net.Security;
+using System.Security.Authentication;
 
 namespace dn32.grpc.easy.client.extensions;
 

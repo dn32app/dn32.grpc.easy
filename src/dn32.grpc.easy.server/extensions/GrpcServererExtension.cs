@@ -2,10 +2,8 @@
 using dn32.grpc.easy.server.model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using ProtoBuf.Grpc.Server;
 using ProtoBuf.Meta;
 using System;

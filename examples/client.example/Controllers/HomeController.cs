@@ -32,7 +32,7 @@ public class HomeController(IExampleGrpcController ExampleGrpcController) : Cont
         time.Stop();
 
         var elapsedMilliseconds = time.ElapsedMilliseconds;
-        
+
         // Run without debuggin for check the performance
         return new { result.Result, milliseconds = (elapsedMilliseconds / count) };
     }
