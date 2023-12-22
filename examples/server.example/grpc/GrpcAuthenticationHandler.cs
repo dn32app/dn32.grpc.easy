@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 
-namespace dn32.grpc.easy.server.authentication;
+namespace server.example.grpc;
 
 internal class GrpcAuthenticationHandler : AuthenticationHandler<GrpcAuthenticationSchemeOptions>
 {
@@ -21,6 +19,8 @@ internal class GrpcAuthenticationHandler : AuthenticationHandler<GrpcAuthenticat
         {
             return Task.FromResult(AuthenticateResult.NoResult());
         }
+
+        var getTokenHere = Context.Request.Headers;
 
         var claimsIdentity = new ClaimsIdentity(SchemeName);
         var ticket = new AuthenticationTicket(new ClaimsPrincipal(claimsIdentity), Scheme.Name);

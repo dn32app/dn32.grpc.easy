@@ -1,11 +1,13 @@
 ﻿using dn32.grpc.easy.client.model;
 using Grpc.Core;
+using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProtoBuf.Grpc.Client;
 using ProtoBuf.Grpc.Configuration;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Authentication;
@@ -14,35 +16,57 @@ namespace dn32.grpc.easy.client.extensions;
 
 public static class GrpcClientExtension
 {
-    public static IServiceCollection AddRemoteGrpcController<TIController>(this IServiceCollection services, string serverUrl, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped) where TIController : class
+    public static GrpcControllerData AddDn32Grpc<TIController>(this IServiceCollection services, string serverUrl, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
     {
         var grpcControllerData = new GrpcControllerData
         {
             Type = typeof(TIController),
             ServiceLifetime = serviceLifetime,
-            ServerUrl = serverUrl
+            ServerUrl = serverUrl,
+            Services = services,
+            Interceptors = []
         };
 
+        return grpcControllerData;
+    }
+
+    public static GrpcControllerData AddGrpcInterceptor<TInterceptor>(this GrpcControllerData grpcControllerData) where TInterceptor : Interceptor
+    {
+        grpcControllerData.Interceptors.Add(typeof(TInterceptor));
+        return grpcControllerData;
+    }
+
+    public static IServiceCollection BuildDn32Grpc(this GrpcControllerData grpcControllerData)
+    {
         var grpcRetryPolicy = new GrpcRetryPolicy();
         var grpcSocketsHttpHandler = new GrpcSocketsHttpHandler();
 
-        var descriptor = ServiceDescriptor.Describe(grpcControllerData.Type, (serviceProvider) => ConnectToRemoteGrpcController(grpcControllerData, grpcRetryPolicy, grpcSocketsHttpHandler), grpcControllerData.ServiceLifetime);
+        var descriptor = ServiceDescriptor.Describe(grpcControllerData.Type, (serviceProvider) =>
+        {
+            return ConnectRemoteService(serviceProvider, grpcControllerData, grpcRetryPolicy, grpcSocketsHttpHandler);
+        }, grpcControllerData.ServiceLifetime);
 
-        if (!services.Contains(descriptor))
-            services.Add(descriptor);
+        if (!grpcControllerData.Services.Contains(descriptor))
+            grpcControllerData.Services.Add(descriptor);
 
-        return services;
+        return grpcControllerData.Services;
     }
 
-    private static object ConnectToRemoteGrpcController(GrpcControllerData dadosDeClienteGrpc, GrpcRetryPolicy grpcRetryPolicy, GrpcSocketsHttpHandler grpcSocketsHttpHandler)
-    {//Este método é chamado somente quando o consumidor da dependência necessita da instância da dependência e não na inicialização da aplicação
-        var canalGrpc = CreateGrpcChannel(dadosDeClienteGrpc.ServerUrl, grpcRetryPolicy, grpcSocketsHttpHandler);
-        var metodo = typeof(GrpcClientFactory).GetMethod(nameof(GrpcClientFactory.CreateGrpcService), [typeof(ChannelBase), typeof(ClientFactory)]) ?? throw new Exception($"Method not found: '{nameof(GrpcClientFactory.CreateGrpcService)}'");
-        metodo = metodo.MakeGenericMethod(dadosDeClienteGrpc.Type) ?? throw new Exception($"Method not found: '{nameof(GrpcClientFactory.CreateGrpcService)}'");
+    private static object ConnectRemoteService(IServiceProvider serviceProvider, GrpcControllerData grpcControllerData, GrpcRetryPolicy grpcRetryPolicy, GrpcSocketsHttpHandler grpcSocketsHttpHandler)
+    {
+        var canalGrpc = CreateGrpcChannel(grpcControllerData.ServerUrl, grpcRetryPolicy, grpcSocketsHttpHandler);
+        object invoker = canalGrpc;
 
-#pragma warning disable CS8603 // Static class
-        return metodo.Invoke(null, [canalGrpc, default(ClientFactory)]);
-#pragma warning restore CS8603 // Static class
+        if (grpcControllerData.Interceptors.Any())
+        {
+            var injects = grpcControllerData.Interceptors.Select(x => (Interceptor)serviceProvider.GetRequiredService(x)).ToArray();
+            invoker = canalGrpc.Intercept(injects);
+        }
+
+        var metodo = typeof(GrpcClientFactory).GetMethod(nameof(GrpcClientFactory.CreateGrpcService), [invoker.GetType(), typeof(ClientFactory)]) ?? throw new Exception($"Method not found: '{nameof(GrpcClientFactory.CreateGrpcService)}'");
+        metodo = metodo.MakeGenericMethod(grpcControllerData.Type) ?? throw new Exception($"Method not found: '{nameof(GrpcClientFactory.CreateGrpcService)}'");
+
+        return metodo.Invoke(null, [invoker, default(ClientFactory)]);
     }
 
     private static GrpcChannel CreateGrpcChannel(string url, GrpcRetryPolicy grpcRetryPolicy, GrpcSocketsHttpHandler grpcSocketsHttpHandler)
@@ -85,6 +109,7 @@ public static class GrpcClientExtension
                 AllowRenegotiation = true,
                 EnabledSslProtocols = SslProtocols.Tls12,
             };
+
             return GrpcChannel.ForAddress(url, new GrpcChannelOptions
             {
                 HttpHandler = handler,

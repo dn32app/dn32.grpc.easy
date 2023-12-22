@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 
-namespace dn32.grpc.easy.server.authentication;
+namespace server.example.grpc;
 
 internal class GrpcAuthenticationSchemeOptions : AuthenticationSchemeOptions
 {

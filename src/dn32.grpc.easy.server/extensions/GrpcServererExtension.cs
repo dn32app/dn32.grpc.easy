@@ -1,5 +1,4 @@
-﻿using dn32.grpc.easy.server.authentication;
-using dn32.grpc.easy.server.model;
+﻿using dn32.grpc.easy.server.model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -17,16 +16,18 @@ public static class GrpcServererExtension
 {
     private static List<ValorInternoParaControladoresGrpc> Controllers { get; set; } = [];
 
-    public static void AddGrpcController<TService, TImplementation>(this IServiceCollection services) where TService : class where TImplementation : class, TService
+    public static IServiceCollection AddGrpcController<TService, TImplementation>(this IServiceCollection services) where TService : class where TImplementation : class, TService
     {
         Controllers.Add(new ValorInternoParaControladoresGrpc
         {
             InterfaceType = typeof(TService),
             ConcreteType = typeof(TImplementation)
         });
+
+        return services;
     }
 
-    public static void AddGrpcServerDefaultInitialize(this IServiceCollection services, WebApplicationBuilder builder, int grpcPort, int? restPort = null)
+    public static IServiceCollection AddGrpcServerDefaultInitialize(this IServiceCollection services, WebApplicationBuilder builder, int grpcPort, int? restPort = null)
     {
         RuntimeTypeModel.Default.IncludeDateTimeKind = true;
 
@@ -38,9 +39,6 @@ public static class GrpcServererExtension
             config.MaxSendMessageSize = 4 * 1024 * 1024; // 4MB
             config.ResponseCompressionLevel = CompressionLevel.Optimal;
         });
-
-        //services.AddCodeFirstGrpcReflection();
-        services.AddAuthentication(GrpcAuthenticationHandler.SchemeName).AddScheme<GrpcAuthenticationSchemeOptions, GrpcAuthenticationHandler>(GrpcAuthenticationHandler.SchemeName, options => options.AlwaysAuthenticate = true);
 
         if (!Controllers.Any()) throw new Exception($"No gRPC controllers added. Use {nameof(GrpcServererExtension)}.{nameof(AddGrpcController)} to add gRPC controllers.");
         Controllers.ForEach(controladores => services.AddScoped(controladores.InterfaceType, controladores.ConcreteType));
@@ -54,6 +52,8 @@ public static class GrpcServererExtension
                 serverOptions.ListenAnyIP(restPort.Value, listenOptions => listenOptions.Protocols = HttpProtocols.Http1);
             }
         });
+
+        return services;
     }
 
     public static void UseGrpcServerDefaultInitialize(this WebApplication app)
@@ -63,10 +63,8 @@ public static class GrpcServererExtension
 
         foreach (var item in Controllers)
         {
-            var metodoComGenerico = metodo.MakeGenericMethod(item.ConcreteType);
-            metodoComGenerico.Invoke(null, new[] { app });
+            var metodoComGenerico = metodo?.MakeGenericMethod(item.ConcreteType);
+            metodoComGenerico?.Invoke(null, new[] { app });
         }
-
-        //app.MapCodeFirstGrpcReflectionService();
     }
 }
