@@ -2,15 +2,15 @@
 
 public class GrpcSocketsHttpHandler
 {
-    public int HandlerPooledConnectionIdleTimeoutEmSegundos { get; set; } = 60;
+    public int HandlerPooledConnectionIdleTimeout { get; set; } = 60;
 
-    public int HandlerKeepAlivePingDelayEmSegundos { get; set; } = 60;
+    public int HandlerKeepAlivePingDelay { get; set; } = 60;
 
-    public int HandlerKeepAlivePingTimeoutEmSegundos { get; set; } = 30;
+    public int HandlerKeepAlivePingTimeout { get; set; } = 30;
 
     public bool HandlerEnableMultipleHttp2Connections { get; set; } = true;
 
-    public int HandlerConnectTimeoutEmSegundos { get; set; } = 30;
+    public int HandlerConnectTimeout { get; set; } = 30;
 
     public int HandlerMaxConnectionsPerServer { get; set; } = 2048;
 
