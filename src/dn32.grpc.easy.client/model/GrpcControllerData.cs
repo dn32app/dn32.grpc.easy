@@ -10,5 +10,7 @@ public class GrpcControllerData
     public required ServiceLifetime ServiceLifetime { get; set; }
     public required string ServerUrl { get; set; }
     public required List<Type> Interceptors { get; set; }
+    public required GrpcRetryPolicy GrpcRetryPolicy { get; set; }
+    public required GrpcSocketsHttpHandler GrpcSocketsHttpHandler { get; set; }
     public required IServiceCollection Services { get; set; }
 }

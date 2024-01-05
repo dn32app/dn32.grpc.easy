@@ -24,7 +24,9 @@ public static class GrpcClientExtension
             ServiceLifetime = serviceLifetime,
             ServerUrl = serverUrl,
             Services = services,
-            Interceptors = []
+            Interceptors = [],
+            GrpcRetryPolicy = new GrpcRetryPolicy(),
+            GrpcSocketsHttpHandler = new GrpcSocketsHttpHandler(),
         };
 
         return grpcControllerData;
@@ -38,8 +40,8 @@ public static class GrpcClientExtension
 
     public static IServiceCollection BuildDn32Grpc(this GrpcControllerData grpcControllerData)
     {
-        var grpcRetryPolicy = new GrpcRetryPolicy();
-        var grpcSocketsHttpHandler = new GrpcSocketsHttpHandler();
+        var grpcRetryPolicy = grpcControllerData.GrpcRetryPolicy;
+        var grpcSocketsHttpHandler = grpcControllerData.GrpcSocketsHttpHandler;// new GrpcSocketsHttpHandler();
 
         var descriptor = ServiceDescriptor.Describe(grpcControllerData.Type, (serviceProvider) =>
         {
