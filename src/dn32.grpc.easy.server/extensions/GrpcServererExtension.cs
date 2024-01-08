@@ -1,4 +1,5 @@
 ﻿using dn32.grpc.easy.server.model;
+using Grpc.Net.Compression;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -14,11 +15,11 @@ namespace dn32.grpc.easy.server.extensions;
 
 public static class GrpcServererExtension
 {
-    private static List<ValorInternoParaControladoresGrpc> Controllers { get; set; } = [];
+    private static List<InternalValuesForGrpcControllers> Controllers { get; set; } = [];
 
     public static IServiceCollection AddGrpcController<TService, TImplementation>(this IServiceCollection services) where TService : class where TImplementation : class, TService
     {
-        Controllers.Add(new ValorInternoParaControladoresGrpc
+        Controllers.Add(new InternalValuesForGrpcControllers
         {
             InterfaceType = typeof(TService),
             ConcreteType = typeof(TImplementation)
@@ -34,7 +35,7 @@ public static class GrpcServererExtension
         services.AddGrpc();
         services.AddCodeFirstGrpc(config =>
         {
-            config.EnableDetailedErrors = false;
+            config.EnableDetailedErrors = true;
             config.MaxReceiveMessageSize = 4 * 1024 * 1024; // 4MB
             config.MaxSendMessageSize = 4 * 1024 * 1024; // 4MB
             config.ResponseCompressionLevel = CompressionLevel.Optimal;

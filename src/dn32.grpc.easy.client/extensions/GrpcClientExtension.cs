@@ -41,7 +41,7 @@ public static class GrpcClientExtension
     public static IServiceCollection BuildDn32Grpc(this GrpcControllerData grpcControllerData)
     {
         var grpcRetryPolicy = grpcControllerData.GrpcRetryPolicy;
-        var grpcSocketsHttpHandler = grpcControllerData.GrpcSocketsHttpHandler;// new GrpcSocketsHttpHandler();
+        var grpcSocketsHttpHandler = grpcControllerData.GrpcSocketsHttpHandler;
 
         var descriptor = ServiceDescriptor.Describe(grpcControllerData.Type, (serviceProvider) =>
         {
