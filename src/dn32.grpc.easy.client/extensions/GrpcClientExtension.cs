@@ -17,17 +17,17 @@ namespace dn32.grpc.easy.client.extensions;
 
 public static class GrpcClientExtension
 {
-    public static GrpcControllerData AddDnController<TIController>(this GrpcControllerData grpcControllerData, string serverUrl, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
+    public static GrpcControllerData AddRemoteController<TIController>(this GrpcControllerData grpcControllerData, string serverUrl, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
     {
         grpcControllerData.Controllers.Add(new() { Type = typeof(TIController), ServerUrl = serverUrl, ServiceLifetime = serviceLifetime });
         return grpcControllerData;
     }
 
-    public static GrpcControllerData AddDn32Grpc<TIController>(this IServiceCollection services, string serverUrl, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
+    public static GrpcControllerData AddDn32Grpc(this IServiceCollection services)
     {
         var grpcControllerData = new GrpcControllerData
         {
-            Controllers = [new() { Type = typeof(TIController), ServerUrl = serverUrl, ServiceLifetime = serviceLifetime }],
+            Controllers = [],
             Services = services,
             Interceptors = [],
             GrpcRetryPolicy = new(),
@@ -40,8 +40,14 @@ public static class GrpcClientExtension
     public static GrpcControllerData AddGrpcInterceptor<TInterceptor>(this GrpcControllerData grpcControllerData, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped) where TInterceptor : Interceptor
     {
         grpcControllerData.Interceptors.Add(typeof(TInterceptor));
-        static object action(IServiceProvider serviceProvider) => serviceProvider.GetRequiredService<TInterceptor>();
-        grpcControllerData.Services.Inject(typeof(TInterceptor), serviceLifetime, action);
+        grpcControllerData.Services.Add(ServiceDescriptor.Describe(typeof(TInterceptor), typeof(TInterceptor), serviceLifetime));
+        //static object action(IServiceProvider serviceProvider)
+        //{
+        //    var s = serviceProvider.GetRequiredService<TInterceptor>();
+        //    return s;
+        //}
+
+        //grpcControllerData.Services.Inject(typeof(TInterceptor), serviceLifetime, action);
         return grpcControllerData;
     }
 
