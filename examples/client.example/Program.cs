@@ -11,8 +11,9 @@ services
     .AddHttpContextAccessor()
     .AddTransient<ClientLoggingInterceptor>()
     .AddTransient<AuthHeadersInterceptor>()
-    .AddDn32Grpc<IExampleGrpcController>("http://localhost:5230")
-    //.AddDnController<IMoreControllers>()
+    .AddDn32Grpc()
+    .AddRemoteController<IExampleGrpcController>("http://localhost:5230")
+    //.AddRemoteController<IMoreControllers>()
     .AddGrpcInterceptor<ClientLoggingInterceptor>()
     .AddGrpcInterceptor<AuthHeadersInterceptor>()
     .BuildDn32Grpc();
