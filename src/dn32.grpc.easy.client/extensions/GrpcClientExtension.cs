@@ -3,6 +3,8 @@ using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using ProtoBuf.Grpc.Client;
 using ProtoBuf.Grpc.Configuration;
@@ -17,6 +19,22 @@ namespace dn32.grpc.easy.client.extensions;
 
 public static class GrpcClientExtension
 {
+    public static void UseGrpcClient(this WebApplication app)
+    {
+        app.Use(async (context, next) =>
+        {
+            try
+            {
+                await next();
+            }
+            catch (RpcException ex)
+            {
+                var endpoint = context.GetEndpoint();
+                throw new Exception($"Error processing gRPC request for: {endpoint} - {context.Request.Scheme}://{context.Request.Host}{context.Request.Path}", ex);
+            }
+        });
+    }
+
     public static GrpcControllerData AddRemoteController<TIController>(this GrpcControllerData grpcControllerData, string serverUrl, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
     {
         grpcControllerData.Controllers.Add(new() { Type = typeof(TIController), ServerUrl = serverUrl, ServiceLifetime = serviceLifetime });

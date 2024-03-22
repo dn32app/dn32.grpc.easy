@@ -20,5 +20,6 @@ services
 // gRPC configuration
 
 var app = builder.Build();
+app.UseGrpcClient();
 app.MapControllers();
 app.Run();
