@@ -30,7 +30,6 @@ public static class GrpcClientExtension
             catch (RpcException ex)
             {
                 var endpoint = context.GetEndpoint();
-                throw new Exception($"Error processing gRPC request for: {endpoint} - {context.Request.Scheme}://{context.Request.Host}{context.Request.Path}", ex);
             }
         });
     }
