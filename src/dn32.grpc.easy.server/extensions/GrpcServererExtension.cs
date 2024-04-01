@@ -1,4 +1,5 @@
-﻿using dn32.grpc.easy.server.model;
+﻿using dn32.grpc.easy.server.exceptions;
+using dn32.grpc.easy.server.model;
 using Grpc.Net.Compression;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -39,6 +40,7 @@ public static class GrpcServererExtension
             config.MaxReceiveMessageSize = 4 * 1024 * 1024; // 4MB
             config.MaxSendMessageSize = 4 * 1024 * 1024; // 4MB
             config.ResponseCompressionLevel = CompressionLevel.Optimal;
+            config.Interceptors.Add<ExceptionInterceptor>();
         });
 
         if (!Controllers.Any()) throw new Exception($"No gRPC controllers added. Use {nameof(GrpcServererExtension)}.{nameof(AddGrpcController)} to add gRPC controllers.");

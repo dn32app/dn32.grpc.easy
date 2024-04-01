@@ -58,13 +58,6 @@ public static class GrpcClientExtension
     {
         grpcControllerData.Interceptors.Add(typeof(TInterceptor));
         grpcControllerData.Services.Add(ServiceDescriptor.Describe(typeof(TInterceptor), typeof(TInterceptor), serviceLifetime));
-        //static object action(IServiceProvider serviceProvider)
-        //{
-        //    var s = serviceProvider.GetRequiredService<TInterceptor>();
-        //    return s;
-        //}
-
-        //grpcControllerData.Services.Inject(typeof(TInterceptor), serviceLifetime, action);
         return grpcControllerData;
     }
 
