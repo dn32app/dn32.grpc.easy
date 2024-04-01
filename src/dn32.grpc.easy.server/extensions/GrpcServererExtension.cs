@@ -44,8 +44,8 @@ public static class GrpcServererExtension
             {
                 foreach(var interceptor in interceptors)
                 {
-                    config.Interceptors.Add(interceptor);
                     //services.Add(ServiceDescriptor.Describe(interceptor, interceptor, ServiceLifetime.Scoped));
+                    config.Interceptors.Add(interceptor);
                 }
             }
         });
