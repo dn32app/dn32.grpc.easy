@@ -1,5 +1,5 @@
-﻿using dn32.grpc.easy.server.exceptions;
-using dn32.grpc.easy.server.model;
+﻿using dn32.grpc.easy.server.model;
+using Grpc.Core.Interceptors;
 using Grpc.Net.Compression;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -29,7 +29,7 @@ public static class GrpcServererExtension
         return services;
     }
 
-    public static IServiceCollection AddGrpcServerDefaultInitialize(this IServiceCollection services, WebApplicationBuilder builder, int grpcPort, int? restPort = null)
+    public static IServiceCollection AddGrpcServerDefaultInitialize(this IServiceCollection services, WebApplicationBuilder builder, int grpcPort, int? restPort = null, List<Type>? interceptors = null)
     {
         RuntimeTypeModel.Default.IncludeDateTimeKind = true;
 
@@ -40,7 +40,14 @@ public static class GrpcServererExtension
             config.MaxReceiveMessageSize = 4 * 1024 * 1024; // 4MB
             config.MaxSendMessageSize = 4 * 1024 * 1024; // 4MB
             config.ResponseCompressionLevel = CompressionLevel.Optimal;
-            config.Interceptors.Add<ExceptionInterceptor>();
+            if(interceptors != null)
+            {
+                foreach(var interceptor in interceptors)
+                {
+                    config.Interceptors.Add(interceptor);
+                    //services.Add(ServiceDescriptor.Describe(interceptor, interceptor, ServiceLifetime.Scoped));
+                }
+            }
         });
 
         if (!Controllers.Any()) throw new Exception($"No gRPC controllers added. Use {nameof(GrpcServererExtension)}.{nameof(AddGrpcController)} to add gRPC controllers.");
