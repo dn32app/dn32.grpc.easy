@@ -1,4 +1,5 @@
-﻿using dn32.grpc.easy.server.model;
+﻿using dn32.grpc.easy.server.exceptions;
+using dn32.grpc.easy.server.model;
 using Grpc.Core.Interceptors;
 using Grpc.Net.Compression;
 using Microsoft.AspNetCore.Builder;
@@ -40,13 +41,12 @@ public static class GrpcServererExtension
             config.MaxReceiveMessageSize = 4 * 1024 * 1024; // 4MB
             config.MaxSendMessageSize = 4 * 1024 * 1024; // 4MB
             config.ResponseCompressionLevel = CompressionLevel.Optimal;
-            if(interceptors != null)
+            interceptors ??= [];
+            interceptors.Add(typeof(ExceptionInterceptor));
+
+            foreach (var interceptor in interceptors)
             {
-                foreach(var interceptor in interceptors)
-                {
-                    //services.Add(ServiceDescriptor.Describe(interceptor, interceptor, ServiceLifetime.Scoped));
-                    config.Interceptors.Add(interceptor);
-                }
+                config.Interceptors.Add(interceptor);
             }
         });
 

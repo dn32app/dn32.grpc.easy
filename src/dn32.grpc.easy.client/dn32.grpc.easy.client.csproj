@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net8</TargetFramework>
 		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<PackageProjectUrl>https://github.com/dn32app/dn32.grpc.easy</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/dn32app/dn32.grpc.easy</RepositoryUrl>
 		<Version>1.0.1-beta08</Version>
