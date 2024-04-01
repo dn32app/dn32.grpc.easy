@@ -5,6 +5,7 @@ using Grpc.Net.Client;
 using Grpc.Net.Client.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProtoBuf.Grpc.Client;
 using ProtoBuf.Grpc.Configuration;
@@ -30,6 +31,7 @@ public static class GrpcClientExtension
             catch (RpcException ex)
             {
                 var endpoint = context.GetEndpoint();
+                throw new Exception($"Error calling the endpoint '{endpoint?.DisplayName}': {ex.Message}");
             }
         });
     }
@@ -139,7 +141,12 @@ public static class GrpcClientExtension
             {
                 AllowRenegotiation = true,
                 EnabledSslProtocols = SslProtocols.Tls12,
+                AllowTlsResume = true,
             };
+
+            //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2Support", true);
+            // o.Address = new Uri(Configuration.GetSection(GrpcUrls.SectionName).Get<GrpcUrls>().Profile);
 
             return GrpcChannel.ForAddress(url, new GrpcChannelOptions
             {
