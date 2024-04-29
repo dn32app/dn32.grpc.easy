@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ProtoBuf.Grpc.Client;
 using ProtoBuf.Grpc.Configuration;
 using System;
@@ -120,6 +121,7 @@ public static class GrpcClientExtension
 
         var handler = new SocketsHttpHandler
         {
+            
             PooledConnectionIdleTimeout = TimeSpan.FromSeconds(grpcSocketsHttpHandler.HandlerPooledConnectionIdleTimeout), //O tempo uma conexão pode ficar ociosa no pool para ser considerada reutilizável. (segundos).
             KeepAlivePingDelay = TimeSpan.FromSeconds(grpcSocketsHttpHandler.HandlerKeepAlivePingDelay), //O intervalo de envio de ping para a garantia da conexão (segundos).
             KeepAlivePingTimeout = TimeSpan.FromSeconds(grpcSocketsHttpHandler.HandlerKeepAlivePingTimeout), //Time-out de uma tentativa de ping com o servidor. O cliente fechará a conexão se não receber nenhum retorno dentro do tempo limite (segundos).
