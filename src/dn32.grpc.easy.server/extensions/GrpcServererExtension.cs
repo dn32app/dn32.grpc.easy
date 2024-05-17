@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 
 namespace dn32.grpc.easy.server.extensions;
 
@@ -55,11 +56,11 @@ public static class GrpcServererExtension
 
         builder.WebHost.ConfigureKestrel((context, serverOptions) =>
         {
-            serverOptions.ListenAnyIP(grpcPort, listenOptions => listenOptions.Protocols = HttpProtocols.Http2);
+            serverOptions.Listen(IPAddress.Loopback, grpcPort, listenOptions => listenOptions.Protocols = HttpProtocols.Http2);
 
             if (restPort != null)
             {
-                serverOptions.ListenAnyIP(restPort.Value, listenOptions => listenOptions.Protocols = HttpProtocols.Http1);
+                serverOptions.Listen(IPAddress.Loopback, restPort.Value, listenOptions => listenOptions.Protocols = HttpProtocols.Http1);
             }
         });
 
