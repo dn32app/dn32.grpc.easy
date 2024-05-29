@@ -1,27 +1,25 @@
 ﻿using dn32.grpc.easy.server.exceptions;
 using dn32.grpc.easy.server.model;
-using Grpc.Core.Interceptors;
-using Grpc.Net.Compression;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ProtoBuf.Grpc.Server;
 using ProtoBuf.Meta;
-using System;
-using System.Collections.Generic;
 using System.IO.Compression;
-using System.Linq;
 
 namespace dn32.grpc.easy.server.extensions;
 
 public static class GrpcServererExtension
 {
-    private static List<InternalValuesForGrpcControllers> Controllers { get; set; } = [];
-
-    public static IServiceCollection AddGrpcController<TService, TImplementation>(this IServiceCollection services) where TService : class where TImplementation : class, TService
+    public static List<InternalValuesForGrpcControllers> InitGrptServer(this IServiceCollection services)
     {
-        Controllers.Add(new InternalValuesForGrpcControllers
+        return [];
+    }
+
+    public static IServiceCollection AddGrpcController<TService, TImplementation>(this IServiceCollection services, List<InternalValuesForGrpcControllers> controllers) where TService : class where TImplementation : class, TService
+    {
+        controllers.Add(new InternalValuesForGrpcControllers
         {
             InterfaceType = typeof(TService),
             ConcreteType = typeof(TImplementation)
@@ -30,7 +28,7 @@ public static class GrpcServererExtension
         return services;
     }
 
-    public static IServiceCollection AddGrpcServerDefaultInitialize(this IServiceCollection services, WebApplicationBuilder builder, int grpcPort, int? restPort = null, List<Type>? interceptors = null)
+    public static IServiceCollection AddGrpcServerDefaultInitialize(this IServiceCollection services, List<InternalValuesForGrpcControllers> controllers, WebApplicationBuilder builder, int grpcPort, int? restPort = null, List<Type>? interceptors = null)
     {
         RuntimeTypeModel.Default.IncludeDateTimeKind = true;
 
@@ -50,8 +48,8 @@ public static class GrpcServererExtension
             }
         });
 
-        if (!Controllers.Any()) throw new Exception($"No gRPC controllers added. Use {nameof(GrpcServererExtension)}.{nameof(AddGrpcController)} to add gRPC controllers.");
-        Controllers.ForEach(controladores => services.AddScoped(controladores.InterfaceType, controladores.ConcreteType));
+        if (!controllers.Any()) throw new Exception($"No gRPC controllers added. Use {nameof(GrpcServererExtension)}.{nameof(AddGrpcController)} to add gRPC controllers.");
+        controllers.ForEach(controladores => services.AddScoped(controladores.InterfaceType, controladores.ConcreteType));
 
         builder.WebHost.UseKestrel().ConfigureKestrel((context, serverOptions) =>
         {
@@ -66,12 +64,12 @@ public static class GrpcServererExtension
         return services;
     }
 
-    public static void UseGrpcServerDefaultInitialize(this WebApplication app)
+    public static void UseGrpcServerDefaultInitialize(this WebApplication app, List<InternalValuesForGrpcControllers> controllers)
     {
         var tipo = typeof(GrpcEndpointRouteBuilderExtensions);
         var metodo = tipo.GetMethod(nameof(GrpcEndpointRouteBuilderExtensions.MapGrpcService));
 
-        foreach (var item in Controllers)
+        foreach (var item in controllers)
         {
             var metodoComGenerico = metodo?.MakeGenericMethod(item.ConcreteType);
             metodoComGenerico?.Invoke(null, new[] { app });

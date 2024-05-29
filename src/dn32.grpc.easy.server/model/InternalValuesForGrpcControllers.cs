@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace dn32.grpc.easy.server.model;
 
-internal readonly record struct InternalValuesForGrpcControllers
+public readonly record struct InternalValuesForGrpcControllers
 {
     internal Type InterfaceType { get; init; }
     internal Type ConcreteType { get; init; }
