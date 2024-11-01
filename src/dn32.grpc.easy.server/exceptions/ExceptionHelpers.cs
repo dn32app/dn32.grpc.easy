@@ -1,6 +1,5 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace dn32.grpc.easy.server.exceptions;
 

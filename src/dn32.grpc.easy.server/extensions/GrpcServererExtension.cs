@@ -28,17 +28,17 @@ public static class GrpcServererExtension
         return services;
     }
 
-    public static IServiceCollection AddGrpcServerDefaultInitialize(this IServiceCollection services, List<InternalValuesForGrpcControllers> controllers, WebApplicationBuilder builder, int grpcPort, int? restPort = null, List<Type>? interceptors = null)
+    public static IServiceCollection AddGrpcServerDefaultInitialize(this IServiceCollection services, List<InternalValuesForGrpcControllers> controllers, WebApplicationBuilder builder, int grpcPort, int? restPort = null, List<Type>? interceptors = null, GrpcServerConfig? configValue = null)
     {
         RuntimeTypeModel.Default.IncludeDateTimeKind = true;
 
         services.AddGrpc();
         services.AddCodeFirstGrpc(config =>
         {
-            config.EnableDetailedErrors = true;
-            config.MaxReceiveMessageSize = 4 * 1024 * 1024; // 4MB
-            config.MaxSendMessageSize = 4 * 1024 * 1024; // 4MB
-            config.ResponseCompressionLevel = CompressionLevel.Optimal;
+            config.EnableDetailedErrors = configValue?.EnableDetailedErrors ?? true;
+            config.MaxReceiveMessageSize = configValue?.MaxReceiveMessageSize ?? 20 * 1024 * 1024; // 20MB
+            config.MaxSendMessageSize = configValue?.MaxSendMessageSize ?? 20 * 1024 * 1024; // 20MB
+            config.ResponseCompressionLevel = configValue?.ResponseCompressionLevel ?? CompressionLevel.Optimal;
             interceptors ??= [];
             interceptors.Add(typeof(ExceptionInterceptor));
 

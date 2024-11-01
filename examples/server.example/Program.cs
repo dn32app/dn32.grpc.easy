@@ -6,22 +6,17 @@ var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
 // gRPC configuration
-builder.Services
-        .AddHttpContextAccessor()
-        .AddGrpcController<IExampleGrpcController, ExampleGrpcController>()
-        .AddGrpcServerDefaultInitialize(builder, 5230, 5231)
-        .AddAuthentication(GrpcAuthenticationHandler.SchemeName)
-        .AddScheme<GrpcAuthenticationSchemeOptions, GrpcAuthenticationHandler>(GrpcAuthenticationHandler.SchemeName, options => options.AlwaysAuthenticate = true);
+var grpcControllers = services.InitGrptServer();
+services
+    .AddHttpContextAccessor()
+    .AddGrpcController<IExampleGrpcController, ExampleGrpcController>(grpcControllers)
+    .AddGrpcServerDefaultInitialize(grpcControllers, builder, 5230, 5231);
 // End gRPC configuration
 
 services.AddAuthorization();
 services.AddAuthentication();
 
 var app = builder.Build();
-
-// gRPC configuration
-app.UseGrpcServerDefaultInitialize();
-// End gRPC configuration
 
 app.UseRouting();
 app.UseAuthentication();

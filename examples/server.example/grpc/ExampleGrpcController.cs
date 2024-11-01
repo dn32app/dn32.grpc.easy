@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using shared.example.contract;
+﻿using shared.example.contract;
 
 namespace server.example.grpc;
 
