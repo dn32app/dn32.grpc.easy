@@ -51,6 +51,8 @@ public static class GrpcServererExtension
         if (!controllers.Any()) throw new Exception($"No gRPC controllers added. Use {nameof(GrpcServererExtension)}.{nameof(AddGrpcController)} to add gRPC controllers.");
         controllers.ForEach(controladores => services.AddScoped(controladores.InterfaceType, controladores.ConcreteType));
 
+        builder.WebHost.ConfigureKestrel((context, options) => { });
+
         builder.WebHost.UseKestrel().ConfigureKestrel((context, serverOptions) =>
         {
             serverOptions.ListenAnyIP(grpcPort, listenOptions => listenOptions.Protocols = HttpProtocols.Http2);

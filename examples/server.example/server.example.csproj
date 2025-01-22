@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.ServiceModel.Primitives" Version="8.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\dn32.grpc.easy.server\dn32.grpc.easy.server.csproj" />
     <ProjectReference Include="..\shared.example.contract\shared.example.contract.csproj" />
   </ItemGroup>
