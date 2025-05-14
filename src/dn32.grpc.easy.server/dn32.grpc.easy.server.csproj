@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<PackageProjectUrl>https://github.com/dn32app/dn32.grpc.easy</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/dn32app/dn32.grpc.easy</RepositoryUrl>
-		<Version>1.0.1-beta22</Version>
+		<Version>1.0.1-beta23</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -19,7 +19,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.2.2" />
-		<PackageReference Include="System.ServiceModel.Primitives" Version="8.1.1" />
+		<PackageReference Include="System.ServiceModel.Primitives" Version="8.1.2" />
 	</ItemGroup>
 	
 </Project>

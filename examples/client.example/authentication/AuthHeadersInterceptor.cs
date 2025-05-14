@@ -12,11 +12,12 @@ public class AuthHeadersInterceptor(IHttpContextAccessor HttpContextAccessor) : 
             {"Authorization", $"Bearer <JWT_TOKEN>"}
         };
 
-        var userIdentity = HttpContextAccessor.HttpContext.User.Identity;
-        if (userIdentity.IsAuthenticated)
+        var userIdentity = HttpContextAccessor?.HttpContext?.User?.Identity;
+        if (userIdentity?.IsAuthenticated == true)
         {
-            metadata.Add("User", userIdentity.Name);
+            metadata.Add("User", userIdentity?.Name ?? string.Empty);
         }
+
         var callOption = context.Options.WithHeaders(metadata);
         context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, callOption);
 

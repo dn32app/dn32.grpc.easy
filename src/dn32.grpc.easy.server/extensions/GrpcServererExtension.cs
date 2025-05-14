@@ -1,7 +1,9 @@
 ﻿using dn32.grpc.easy.server.exceptions;
 using dn32.grpc.easy.server.model;
+using Grpc.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ProtoBuf.Grpc.Server;
@@ -71,10 +73,59 @@ public static class GrpcServererExtension
         var tipo = typeof(GrpcEndpointRouteBuilderExtensions);
         var metodo = tipo.GetMethod(nameof(GrpcEndpointRouteBuilderExtensions.MapGrpcService));
 
+        app.Use(async (context, next) =>
+        {
+            try
+            {
+                await next();
+            }
+            catch (Exception ex)
+            {
+                await ResultExceptionAsync(context, ex);
+                return;
+            }
+
+            if (context.Response.StatusCode != StatusCodes.Status200OK)
+            {
+                await ResultExceptionAsync(context);
+            }
+        });
+
+
         foreach (var item in controllers)
         {
             var metodoComGenerico = metodo?.MakeGenericMethod(item.ConcreteType);
             metodoComGenerico?.Invoke(null, new[] { app });
+        }
+    }
+
+    private static async Task ResultExceptionAsync(HttpContext context, Exception? ex = null)
+    {
+        context.Response.Clear();
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        context.Response.ContentType = "application/grpc";
+        context.Response.Headers.GrpcEncoding = "identity";
+        await context.Response.Body.FlushAsync();
+
+        if (context.Items.TryGetValue("grpc-status", out var statusCode) && statusCode is StatusCode)
+            context.Response.AppendTrailer("grpc-status", ((int)statusCode).ToString());
+        else
+            context.Response.AppendTrailer("grpc-status", ((int)StatusCode.Internal).ToString());
+
+        context.Response.AppendTrailer("grpc-message", Uri.EscapeDataString(ex?.Message ?? "Grpc error"));
+        context.Response.AppendTrailer("grpc-endpoint", Uri.EscapeDataString(context.GetEndpoint()?.DisplayName ?? string.Empty));
+
+        if (ex is RpcException grpException)
+            foreach (var trailers in grpException.Trailers)
+                context.Response.AppendTrailer(Uri.EscapeDataString(trailers.Key), Uri.EscapeDataString(trailers.Value));
+
+        foreach (var item in context.Items)
+        {
+            var key = item.Key as string;
+            var value = item.Value as string;
+            if (string.IsNullOrEmpty(key)) continue;
+            if (string.IsNullOrEmpty(value)) continue;
+            context.Response.AppendTrailer(Uri.EscapeDataString(key), Uri.EscapeDataString(value));
         }
     }
 }
