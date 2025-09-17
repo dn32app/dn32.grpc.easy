@@ -107,13 +107,15 @@ public static class GrpcServererExtension
         context.Response.Headers.GrpcEncoding = "identity";
         await context.Response.Body.FlushAsync();
 
-        if (context.Items.TryGetValue("grpc-status", out var statusCode) && statusCode is StatusCode)
-            context.Response.AppendTrailer("grpc-status", ((int)statusCode).ToString());
-        else
-            context.Response.AppendTrailer("grpc-status", ((int)StatusCode.Internal).ToString());
-
-        context.Response.AppendTrailer("grpc-message", Uri.EscapeDataString(ex?.Message ?? "Grpc error"));
-        context.Response.AppendTrailer("grpc-endpoint", Uri.EscapeDataString(context.GetEndpoint()?.DisplayName ?? string.Empty));
+        if (!context.Response.HasStarted)
+        {
+            if (context.Items.TryGetValue("grpc-status", out var statusCode) && statusCode is StatusCode)
+                context.Response.AppendTrailer("grpc-status", ((int)statusCode).ToString());
+            else
+                context.Response.AppendTrailer("grpc-status", ((int)StatusCode.Internal).ToString());
+            context.Response.AppendTrailer("grpc-message", Uri.EscapeDataString(ex?.Message ?? "Grpc error"));
+            context.Response.AppendTrailer("grpc-endpoint", Uri.EscapeDataString(context.GetEndpoint()?.DisplayName ?? string.Empty));
+        }
 
         if (ex is RpcException grpException)
             foreach (var trailers in grpException.Trailers)
