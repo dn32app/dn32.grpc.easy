@@ -6,7 +6,7 @@ public class ExampleGrpcController(IHttpContextAccessor httpContextAccessor) : I
 {
     public async Task<GrpcResultContractExampleV1> SimpleExampleAsync(GrpcContractExampleV1 exampleGrpcContract)
     {
-        var user = httpContextAccessor.HttpContext.User;
+        var user = httpContextAccessor?.HttpContext?.User;
         await Task.CompletedTask;
         return new GrpcResultContractExampleV1 { Result = $"{exampleGrpcContract.Name}, {string.Join(",", exampleGrpcContract.Metadata?.Select(m => $"{m.Key}: {m.Value}") ?? [])}" };
     }
