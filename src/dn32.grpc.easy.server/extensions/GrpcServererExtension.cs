@@ -53,8 +53,6 @@ public static class GrpcServererExtension
         if (!controllers.Any()) throw new Exception($"No gRPC controllers added. Use {nameof(GrpcServererExtension)}.{nameof(AddGrpcController)} to add gRPC controllers.");
         controllers.ForEach(controladores => services.AddScoped(controladores.InterfaceType, controladores.ConcreteType));
 
-        builder.WebHost.ConfigureKestrel((context, options) => { });
-
         builder.WebHost.UseKestrel().ConfigureKestrel((context, serverOptions) =>
         {
             serverOptions.ListenAnyIP(grpcPort, listenOptions => listenOptions.Protocols = HttpProtocols.Http2);
@@ -101,21 +99,21 @@ public static class GrpcServererExtension
 
     private static async Task ResultExceptionAsync(HttpContext context, Exception? ex = null)
     {
+        // Se a resposta já começou, não é possível limpar headers nem anexar trailers.
+        if (context.Response.HasStarted) return;
+
         context.Response.Clear();
         context.Response.StatusCode = StatusCodes.Status200OK;
         context.Response.ContentType = "application/grpc";
         context.Response.Headers.GrpcEncoding = "identity";
-        await context.Response.Body.FlushAsync();
 
-        if (!context.Response.HasStarted)
-        {
-            if (context.Items.TryGetValue("grpc-status", out var statusCode) && statusCode is StatusCode)
-                context.Response.AppendTrailer("grpc-status", ((int)statusCode).ToString());
-            else
-                context.Response.AppendTrailer("grpc-status", ((int)StatusCode.Internal).ToString());
-            context.Response.AppendTrailer("grpc-message", Uri.EscapeDataString(ex?.Message ?? "Grpc error"));
-            context.Response.AppendTrailer("grpc-endpoint", Uri.EscapeDataString(context.GetEndpoint()?.DisplayName ?? string.Empty));
-        }
+        // Trailers devem ser registrados ANTES de iniciar a resposta (FlushAsync inicia o envio).
+        if (context.Items.TryGetValue("grpc-status", out var statusCode) && statusCode is StatusCode sc)
+            context.Response.AppendTrailer("grpc-status", ((int)sc).ToString());
+        else
+            context.Response.AppendTrailer("grpc-status", ((int)StatusCode.Internal).ToString());
+        context.Response.AppendTrailer("grpc-message", Uri.EscapeDataString(ex?.Message ?? "Grpc error"));
+        context.Response.AppendTrailer("grpc-endpoint", Uri.EscapeDataString(context.GetEndpoint()?.DisplayName ?? string.Empty));
 
         if (ex is RpcException grpException)
             foreach (var trailers in grpException.Trailers)
@@ -129,5 +127,7 @@ public static class GrpcServererExtension
             if (string.IsNullOrEmpty(value)) continue;
             context.Response.AppendTrailer(Uri.EscapeDataString(key), Uri.EscapeDataString(value));
         }
+
+        await context.Response.Body.FlushAsync();
     }
 }

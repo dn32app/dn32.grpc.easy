@@ -22,4 +22,6 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseGrpcServerDefaultInitialize(grpcControllers);
+
 app.Run();

@@ -8,5 +8,5 @@ public class GrpcRetryPolicy
 
     public int RetryPolicyMaxBackoff { get; set; } = 2000;
 
-    public int RetryPolicyBackoffMultiplier { get; set; } = 15;
+    public double RetryPolicyBackoffMultiplier { get; set; } = 1.5;
 }

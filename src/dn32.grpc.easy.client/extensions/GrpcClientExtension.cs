@@ -16,6 +16,12 @@ namespace dn32.grpc.easy.client.extensions;
 
 public static class GrpcClientExtension
 {
+    static GrpcClientExtension()
+    {
+        // Switch global e idempotente: configurado uma única vez, não a cada criação de canal.
+        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2Support", true);
+    }
+
     public static void UseGrpcClient(this WebApplication app)
     {
         app.Use(async (context, next) =>
@@ -27,7 +33,8 @@ public static class GrpcClientExtension
             catch (RpcException ex)
             {
                 var endpoint = context.GetEndpoint();
-                throw new Exception($"Error calling the endpoint '{endpoint?.DisplayName}': {ex.Message}");
+                // Preserva a RpcException original (StatusCode, trailers, CorrelationId) como InnerException.
+                throw new Exception($"Error calling the endpoint '{endpoint?.DisplayName}': {ex.Message}", ex);
             }
         });
     }
@@ -75,15 +82,18 @@ public static class GrpcClientExtension
 
     private static void Inject(this IServiceCollection services, Type type, ServiceLifetime serviceLifetime, Func<IServiceProvider, object> implementationFactory)
     {
+        // ServiceDescriptor não implementa igualdade por valor; comparar pelo ServiceType evita registro duplicado.
+        if (services.Any(d => d.ServiceType == type)) return;
         var descriptor = ServiceDescriptor.Describe(type, implementationFactory, serviceLifetime);
-        if (!services.Contains(descriptor))
-            services.Add(descriptor);
+        services.Add(descriptor);
     }
 
     private static object ConnectRemoteService(this IServiceProvider serviceProvider, GrpcControllerData grpcControllerData,
         GrpcRetryPolicy grpcRetryPolicy, GrpcSocketsHttpHandler grpcSocketsHttpHandler, RemoveControllerData controller)
     {
-        var canalGrpc = CreateGrpcChannel(controller.ServerUrl, grpcRetryPolicy, grpcSocketsHttpHandler);
+        var canalGrpc = grpcControllerData.ChannelCache.GetOrAdd(
+            controller.ServerUrl,
+            url => CreateGrpcChannel(url, grpcRetryPolicy, grpcSocketsHttpHandler));
         object invoker = canalGrpc;
 
         if (grpcControllerData.Interceptors.Any())
@@ -109,7 +119,7 @@ public static class GrpcClientExtension
                 MaxAttempts = grpcRetryPolicy.RetryPolicyMaxAttempts, //O número máximo de tentativas de chamada, incluindo a tentativa original. Esse valor é limitado pelo GrpcChannelOptions.MaxRetryAttempts qual o padrão é 5. Um valor é necessário e deve ser maior que 1.
                 InitialBackoff = TimeSpan.FromMilliseconds(grpcRetryPolicy.RetryPolicyInitialBackoff), //O atraso inicial de retirada entre tentativas de repetição. Um atraso aleatório entre 0 e a retirada atual determina quando a próxima tentativa de repetição é feita. Após cada tentativa, a retirada atual é multiplicada por BackoffMultiplier. Um valor é necessário e deve ser maior que zero.
                 MaxBackoff = TimeSpan.FromMilliseconds(grpcRetryPolicy.RetryPolicyMaxBackoff), //A retirada máxima coloca um limite superior no crescimento exponencial de retirada. Um valor é necessário e deve ser maior que zero.
-                BackoffMultiplier = (double)grpcRetryPolicy.RetryPolicyBackoffMultiplier, //A retirada será multiplicada por esse valor após cada tentativa de repetição e aumentará exponencialmente quando o multiplicador for maior que 1. Um valor é necessário e deve ser maior que zero.              
+                BackoffMultiplier = grpcRetryPolicy.RetryPolicyBackoffMultiplier, //A retirada será multiplicada por esse valor após cada tentativa de repetição e aumentará exponencialmente quando o multiplicador for maior que 1. Um valor é necessário e deve ser maior que zero.
                 RetryableStatusCodes = { StatusCode.Unavailable } //Uma coleção de códigos de status. Uma chamada gRPC que falha com um status correspondente será repetida automaticamente. Para obter mais informações sobre códigos de status, consulte códigos de status e seu uso no gRPC. Pelo menos um código de status retrátível é necessário. //https://grpc.github.io/grpc/core/md_doc_statuscodes.html
             }
         };
@@ -137,13 +147,9 @@ public static class GrpcClientExtension
             handler.SslOptions = new SslClientAuthenticationOptions
             {
                 AllowRenegotiation = true,
-                EnabledSslProtocols = SslProtocols.Tls12,
+                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
                 AllowTlsResume = true,
             };
-
-            //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2Support", true);
-            // o.Address = new Uri(Configuration.GetSection(GrpcUrls.SectionName).Get<GrpcUrls>().Profile);
 
             return GrpcChannel.ForAddress(url, new GrpcChannelOptions
             {

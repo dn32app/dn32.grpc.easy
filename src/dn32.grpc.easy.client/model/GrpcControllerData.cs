@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Grpc.Net.Client;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 
 namespace dn32.grpc.easy.client.model;
 
@@ -16,4 +18,8 @@ public class GrpcControllerData
     public required GrpcRetryPolicy GrpcRetryPolicy { get; set; }
     public required GrpcSocketsHttpHandler GrpcSocketsHttpHandler { get; set; }
     public required IServiceCollection Services { get; set; }
+
+    // GrpcChannel é caro e thread-safe: deve ser reutilizado, nunca recriado por requisição.
+    // Cache por URL para evitar vazamento de conexões/SocketsHttpHandler.
+    internal ConcurrentDictionary<string, GrpcChannel> ChannelCache { get; } = new();
 }

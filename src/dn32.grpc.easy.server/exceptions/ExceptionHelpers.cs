@@ -44,8 +44,12 @@ public static class ExceptionHelpers
     private static RpcException HandleRpcException<T>(RpcException exception, ILogger<T> logger, Guid correlationId)
     {
         logger.LogError(exception, $"CorrelationId: {correlationId} - An error occurred");
-        var trailers = exception.Trailers;
-        trailers.Add(CreateTrailers(correlationId)[0]);
+
+        // exception.Trailers pode ser somente-leitura; copiar para uma nova Metadata evita InvalidOperationException.
+        var trailers = new Metadata();
+        foreach (var entry in exception.Trailers)
+            trailers.Add(entry);
+        trailers.Add("CorrelationId", correlationId.ToString());
 
         // Unwrap the innermost status detail to avoid deeply nested Status(...) strings
         var rootDetail = UnwrapRpcMessage(exception.Status.Detail);
